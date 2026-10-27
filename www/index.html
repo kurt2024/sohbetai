@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AI Asistan Pro</title>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0b0f19;
+            --bg-secondary: #151c2c;
+            --bg-card: #1e293b;
+            --accent-glow: rgba(99, 102, 241, 0.35);
+            --accent-color: #6366f1;
+            --accent-hover: #4f46e5;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --bot-bubble: #1e293b;
+            --user-bubble: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            --border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+        }
+
+        /* Header Styling */
+        header {
+            background: rgba(21, 28, 44, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            z-index: 10;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.2rem;
+            box-shadow: 0 0 15px var(--accent-glow);
+            animation: pulse-glow 3s infinite alternate;
+        }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 10px rgba(99, 102, 241, 0.3); }
+            100% { box-shadow: 0 0 22px rgba(168, 85, 247, 0.6); }
+        }
+
+        .brand-info h1 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            background: linear-gradient(90deg, #ffffff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: #10b981;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #10b981;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .header-actions button {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .header-actions button:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Chat Area */
+        #chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            scroll-behavior: smooth;
+        }
+
+        #chat-container::-webkit-scrollbar {
+            width: 5px;
+        }
+        #chat-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .message-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            opacity: 0;
+            transform: translateY(15px);
+            animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-row.user-row {
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .bot-avatar {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: #818cf8;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-avatar {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: #fff;
+        }
+
+        .msg-bubble {
+            max-width: 80%;
+            padding: 13px 17px;
+            border-radius: 18px;
+            font-size: 0.94rem;
+            line-height: 1.55;
+            position: relative;
+            word-break: break-word;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .bot-row .msg-bubble {
+            background-color: var(--bot-bubble);
+            color: var(--text-primary);
+            border-top-left-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .user-row .msg-bubble {
+            background: var(--user-bubble);
+            color: #ffffff;
+            border-top-right-radius: 4px;
+        }
+
+        .msg-time {
+            font-size: 0.68rem;
+            margin-top: 6px;
+            opacity: 0.65;
+            text-align: right;
+        }
+
+        /* Typing Dots Animation */
+        .typing-dots {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 6px;
+        }
+
+        .typing-dots span {
+            width: 7px;
+            height: 7px;
+            background: #818cf8;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Input Controls Area */
+        .input-wrapper {
+            background: rgba(21, 28, 44, 0.95);
+            backdrop-filter: blur(12px);
+            padding: 14px 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .input-box {
+            display: flex;
+            align-items: center;
+            background: var(--bg-primary);
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 28px;
+            padding: 6px 8px 6px 18px;
+            transition: all 0.25s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .input-box:focus-within {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px var(--accent-glow), inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 0.95rem;
+            padding: 8px 0;
+        }
+
+        input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .send-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border: none;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+            flex-shrink: 0;
+        }
+
+        .send-btn:active {
+            transform: scale(0.9);
+        }
+
+        .send-btn:disabled {
+            background: #334155;
+            box-shadow: none;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* Quick Action Chips */
+        .chips-container {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 4px;
+            scroll-behavior: smooth;
+        }
+        .chips-container::-webkit-scrollbar { display: none; }
+
+        .chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chip:hover {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: var(--accent-color);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header>
+        <div class="brand">
+            <div class="brand-icon">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <div class="brand-info">
+                <h1>AI Asistan Pro</h1>
+                <div class="status-badge">
+                    <span class="status-dot"></span> Çevrimiçi (Gemini 2.5)
+                </div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button onclick="clearChat()" title="Sohbeti Temizle">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Chat Area -->
+    <div id="chat-container">
+        <div class="message-row bot-row">
+            <div class="avatar bot-avatar"><i class="fa-solid fa-robot"></i></div>
+            <div class="msg-bubble">
+                Merhaba! Ben sizin akıllı yapay zeka asistanınızım. Size bugün nasıl yardımcı olabilirim?
+                <div class="msg-time" id="init-time"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-wrapper">
+        <div class="chips-container">
+            <div class="chip" onclick="quickSend('Bana bugün için motive edici bir söz söyle.')"><i class="fa-solid fa-lightbulb"></i> Günün Sözü</div>
+            <div class="chip" onclick="quickSend('Sağlıklı beslenme için 3 altın kural nedir?')"><i class="fa-solid fa-apple-whole"></i> Beslenme Tavsiyesi</div>
+            <div class="chip" onclick="quickSend('Kısaca yapay zeka nedir açıklar mısın?')"><i class="fa-solid fa-brain"></i> Yapay Zeka Nedir?</div>
+        </div>
+        <div class="input-box">
+            <input type="text" id="userInput" placeholder="Mesajınızı yazın..." autocomplete="off" onkeydown="if(event.key==='Enter') sendMessage()">
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = "AQ.Ab8RN6JjqlZ0EKjm1lm7dWiI44ENQi4D6wDA5eZ-n6pbWGy0cQ";
+        document.getElementById("init-time").innerText = getTimeStr();
+
+        function getTimeStr() {
+            const d = new Date();
+            return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+        }
+
+        function quickSend(text) {
+            document.getElementById("userInput").value = text;
+            sendMessage();
+        }
+
+        function clearChat() {
+            const container = document.getElementById("chat-container");
+            container.innerHTML = `
+                <div class="message-row bot-row">
+                    <div class="avatar bot-avatar"><i class="fa-solid fa-robot"></i></div>
+                    <div class="msg-bubble">
+                        Sohbet geçmişi temizlendi. Yeni bir soru sorabilirsiniz!
+                        <div class="msg-time">${getTimeStr()}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById("userInput");
+            const container = document.getElementById("chat-container");
+            const btn = document.getElementById("sendBtn");
+            const text = input.value.trim();
+
+            if (!text) return;
+
+            // 1. Add User Message
+            appendMessage(text, "user");
+            input.value = "";
+            btn.disabled = true;
+
+            // 2. Add Typing Indicator
+            const loadingRow = createTypingIndicator();
+            container.appendChild(loadingRow);
+            scrollToBottom();
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: text }] }] })
+                });
+
+                const data = await response.json();
+                const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Üzgünüm, şu an bir yanıt oluşturamadım.";
+                
+                // Remove typing indicator and add response
+                container.removeChild(loadingRow);
+                appendMessage(replyText, "bot");
+
+            } catch (error) {
+                container.removeChild(loadingRow);
+                appendMessage("Bir bağlantı hatası oluştu. Lütfen internetinizi kontrol edin.", "bot");
+            } finally {
+                btn.disabled = false;
+                scrollToBottom();
+            }
+        }
+
+        function appendMessage(text, sender) {
+            const container = document.getElementById("chat-container");
+            const isUser = sender === "user";
+
+            const row = document.createElement("div");
+            row.className = `message-row ${isUser ? 'user-row' : 'bot-row'}`;
+
+            const avatar = document.createElement("div");
+            avatar.className = `avatar ${isUser ? 'user-avatar' : 'bot-avatar'}`;
+            avatar.innerHTML = isUser ? '<i class="fa-solid fa-user"></i>' : '<i class="fa-solid fa-robot"></i>';
+
+            const bubble = document.createElement("div");
+            bubble.className = "msg-bubble";
+            bubble.innerText = text;
+
+            const time = document.createElement("div");
+            time.className = "msg-time";
+            time.innerText = getTimeStr();
+            bubble.appendChild(time);
+
+            row.appendChild(avatar);
+            row.appendChild(bubble);
+
+            container.appendChild(row);
+            scrollToBottom();
+            return row;
+        }
+
+        function createTypingIndicator() {
+            const row = document.createElement("div");
+            row.className = "message-row bot-row";
+            row.id = "typing-row";
+
+            const avatar = document.createElement("div");
+            avatar.className = "avatar bot-avatar";
+            avatar.innerHTML = '<i class="fa-solid fa-robot"></i>';
+
+            const bubble = document.createElement("div");
+            bubble.className = "msg-bubble";
+
+            const dots = document.createElement("div");
+            dots.className = "typing-dots";
+            dots.innerHTML = '<span></span><span></span><span></span>';
+
+            bubble.appendChild(dots);
+            row.appendChild(avatar);
+            row.appendChild(bubble);
+            return row;
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById("chat-container");
+            container.scrollTop = container.scrollHeight;
+        }
+    </script>
+</body>
+</html>
