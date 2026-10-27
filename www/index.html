@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Yapay Zeka Asistanı</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Marked.js for Markdown parsing in AI responses -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .message-content pre {
+            background-color: #1e293b;
+            color: #f8fafc;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+            overflow-x: auto;
+        }
+        .message-content code {
+            font-family: monospace;
+            background-color: rgba(0,0,0,0.05);
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+        }
+        .message-content pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm z-10">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-200">
+                <i class="fa-solid fa-sparkles text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-slate-800 text-lg leading-tight">Gemini AI Asistan</h1>
+                <p class="text-xs text-emerald-600 font-medium flex items-center gap-1.5 mt-0.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    API Bağlantısı Aktif (Hazır)
+                </p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button onclick="clearChat()" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-lg transition font-medium flex items-center gap-2">
+                <i class="fa-solid fa-trash-can text-slate-400"></i>
+                <span class="hidden sm:inline">Sohbeti Temizle</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Chat Container -->
+    <main id="chat-container" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 max-w-4xl w-full mx-auto">
+        <!-- Welcome Message -->
+        <div class="flex items-start gap-4">
+            <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                <i class="fa-solid fa-robot text-sm"></i>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-4 sm:p-5 shadow-sm max-w-[85%] sm:max-w-[75%] message-content">
+                <p class="font-semibold text-slate-900 mb-1">Merhaba! Ben Gemini.</p>
+                <p class="text-slate-600 text-sm leading-relaxed">Sana nasıl yardımcı olabilirim? Kod yazabilir, sorularını yanıtlayabilir veya metinler üretebilirim.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Typing Indicator (Hidden by default) -->
+    <div id="typing-indicator" class="hidden max-w-4xl w-full mx-auto px-6 py-2">
+        <div class="flex items-start gap-4">
+            <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                <i class="fa-solid fa-robot text-sm"></i>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm flex items-center space-x-2">
+                <div class="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style="animation-delay: 0s"></div>
+                <div class="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                <div class="w-2 h-2 bg-indigo-600 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                <span class="text-xs text-slate-400 ml-2 font-medium">Gemini düşünüyor...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input Footer Bar -->
+    <footer class="bg-white border-t border-slate-200 p-4 sm:p-6 shadow-lg z-10">
+        <form id="chat-form" onsubmit="handleSendMessage(event)" class="max-w-4xl mx-auto flex items-center gap-3">
+            <div class="relative flex-1">
+                <input 
+                    type="text" 
+                    id="user-input" 
+                    placeholder="Bir şeyler sorun veya yazın..." 
+                    class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3.5 pr-12 text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition text-sm sm:text-base"
+                    autocomplete="off"
+                    required
+                >
+                <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hidden sm:flex items-center gap-1 text-xs bg-white px-2 py-1 rounded border border-slate-200 shadow-sm">
+                    <span>Enter ↵</span>
+                </div>
+            </div>
+            <button 
+                type="submit" 
+                id="send-button"
+                class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white w-12 h-12 rounded-xl flex items-center justify-center shadow-md shadow-indigo-200 transition shrink-0 cursor-pointer"
+            >
+                <i class="fa-solid fa-paper-plane text-sm"></i>
+            </button>
+        </form>
+    </footer>
+
+    <!-- Notification Message Box (Custom alert replacement) -->
+    <div id="notification-box" class="fixed bottom-6 right-6 bg-rose-600 text-white px-4 py-3 rounded-xl shadow-lg transform translate-y-24 opacity-0 transition-all duration-300 flex items-center gap-3 z-50">
+        <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+        <span id="notification-text" class="text-sm font-medium">Hata oluştu.</span>
+    </div>
+
+    <!-- Application JavaScript Logic -->
+    <script>
+        // Integrated API Key from User Request
+        const apiKey = "AQ.Ab8RN6JjqlZ0EKjm1lm7dWiI44ENQi4D6wDA5eZ-n6pbWGy0cQ";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+        // Chat history state tracking for context preservation
+        let chatHistory = [];
+
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const chatForm = document.getElementById('chat-form');
+
+        function showNotification(message) {
+            const box = document.getElementById('notification-box');
+            const text = document.getElementById('notification-text');
+            text.textContent = message;
+            box.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                box.classList.add('translate-y-24', 'opacity-0');
+            }, 4000);
+        }
+
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function clearChat() {
+            chatContainer.innerHTML = `
+                <div class="flex items-start gap-4">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                        <i class="fa-solid fa-robot text-sm"></i>
+                    </div>
+                    <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-sm p-4 sm:p-5 shadow-sm max-w-[85%] sm:max-w-[75%] message-content">
+                        <p class="font-semibold text-slate-900 mb-1">Sohbet sıfırlandı.</p>
+                        <p class="text-slate-600 text-sm leading-relaxed">Yeni bir konuşma başlatmak için aşağıdan yazmaya başlayabilirsiniz.</p>
+                    </div>
+                </div>
+            `;
+            chatHistory = [];
+        }
+
+        function appendMessage(sender, text) {
+            const isUser = sender === 'user';
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex items-start gap-4 ${isUser ? 'flex-row-reverse' : ''}`;
+
+            let avatarBg = isUser ? 'bg-slate-700' : 'bg-indigo-600';
+            let avatarIcon = isUser ? 'fa-user' : 'fa-robot';
+            let bubbleStyle = isUser 
+                ? 'bg-indigo-600 text-white rounded-tr-sm shadow-indigo-100' 
+                : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm shadow-sm message-content';
+
+            // Format markdown for assistant, plain text escape for user input safety
+            let formattedContent = isUser ? escapeHtml(text) : marked.parse(text);
+
+            messageDiv.innerHTML = `
+                <div class="w-9 h-9 rounded-xl ${avatarBg} text-white flex items-center justify-center shrink-0 shadow-md">
+                    <i class="fa-solid ${avatarIcon} text-sm"></i>
+                </div>
+                <div class="${bubbleStyle} rounded-2xl p-4 sm:p-5 shadow-sm max-w-[85%] sm:max-w-[75%] text-sm sm:text-base leading-relaxed">
+                    ${formattedContent}
+                </div>
+            `;
+            chatContainer.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        async function handleSendMessage(event) {
+            event.preventDefault();
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            // Clear input and append user message
+            userInput.value = '';
+            appendMessage('user', text);
+
+            // Update chat history structure
+            chatHistory.push({
+                role: 'user',
+                parts: [{ text: text }]
+            });
+
+            // Show typing indicator and scroll
+            typingIndicator.classList.remove('hidden');
+            scrollToBottom();
+
+            // API Call with exponential backoff retry logic
+            let success = false;
+            let attempts = 0;
+            let responseData = null;
+
+            while (!success && attempts < 4) {
+                try {
+                    attempts++;
+                    const payload = {
+                        contents: chatHistory
+                    };
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API hatası: ${response.status}`);
+                    }
+
+                    responseData = await response.json();
+                    success = true;
+                } catch (error) {
+                    if (attempts >= 4) {
+                        console.error("API İsteği başarısız:", error);
+                    } else {
+                        // Exponential backoff delay (1s, 2s, 4s)
+                        await new Promise(res => setTimeout(res, Math.pow(2, attempts - 1) * 1000));
+                    }
+                }
+            }
+
+            // Hide typing indicator
+            typingIndicator.classList.add('hidden');
+
+            if (success && responseData && responseData.candidates && responseData.candidates.length > 0) {
+                const candidate = responseData.candidates[0];
+                if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
+                    const aiResponseText = candidate.content.parts[0].text;
+                    
+                    // Append AI response
+                    appendMessage('ai', aiResponseText);
+
+                    // Push model turn to chat history for context continuity
+                    chatHistory.push({
+                        role: 'model',
+                        parts: [{ text: aiResponseText }]
+                    });
+                } else {
+                    showNotification("Yapay zekadan boş yanıt alındı.");
+                }
+            } else {
+                showNotification("Bağlantı kurulamadı veya API anahtarı hatası oluştu.");
+            }
+        }
+    </script>
+</body>
+</html>
