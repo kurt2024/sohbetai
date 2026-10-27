@@ -1,0 +1,6 @@
+{
+  "appId": "com.aichatbot.pro",
+  "appName": "AI Asistan Pro",
+  "webDir": ".",
+  "bundledWebRuntime": false
+}
